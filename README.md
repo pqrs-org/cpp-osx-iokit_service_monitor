@@ -38,7 +38,7 @@ cget install pqrs-org/cpp-dispatcher@v2.1.0 --cmake header
 cget install pqrs-org/cpp-osx-cf_ptr@v1.2.0 --cmake header
 cget install pqrs-org/cpp-osx-cf_run_loop_thread@v1.2.0 --cmake header
 cget install pqrs-org/cpp-osx-iokit-ioobject_ptr@v1.3.0 --cmake header
-cget install pqrs-org/cpp-osx-iokit-ioservice_monitor@v1.1.0 --cmake header
+cget install pqrs-org/cpp-osx-iokit-ioservice_monitor@v1.2.0 --cmake header
 cget install pqrs-org/cpp-osx-iokit-types@v1.2.0 --cmake header
 cget install pqrs-org/cpp-thread_wait@v1.2.0 --cmake header
 ```
