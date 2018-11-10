@@ -1,6 +1,6 @@
 #pragma once
 
-// pqrs::ioservice_monitor v1.2.0
+// pqrs::ioservice_monitor v1.3.0
 
 // (C) Copyright Takayama Fumihiko 2018.
 // Distributed under the Boost Software License, Version 1.0.
