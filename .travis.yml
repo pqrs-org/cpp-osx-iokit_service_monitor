@@ -1,0 +1,5 @@
+language: cpp
+os: osx
+compiler: clang
+install: true
+script: make -C example
