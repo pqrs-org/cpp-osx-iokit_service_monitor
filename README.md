@@ -12,7 +12,7 @@ A wrapper class of IOService notifications.
 
 cpp-osx-iokit-ioservice_monitor depends the following classes.
 
-- [Nod] (https://github.com/fr00b0/nod)
+- [Nod](https://github.com/fr00b0/nod)
 - [pqrs::cf_ptr](https://github.com/pqrs-org/cpp-osx-cf_ptr)
 - [pqrs::cf_run_loop_thread](https://github.com/pqrs-org/cpp-osx-cf_run_loop_thread)
 - [pqrs::dispatcher](https://github.com/pqrs-org/cpp-dispatcher)
@@ -32,5 +32,13 @@ Copy `include/pqrs` directory into your include directory.
 You can also install `include/pqrs` by using [cget](https://github.com/pfultz2/cget).
 
 ```shell
+cget install foonathan/type_safe@v0.2 --cmake header
+cget install fr00b0/nod@v0.5.0 --cmake header
+cget install pqrs-org/cpp-dispatcher@v2.1.0 --cmake header
+cget install pqrs-org/cpp-osx-cf_ptr@v1.2.0 --cmake header
+cget install pqrs-org/cpp-osx-cf_run_loop_thread@v1.2.0 --cmake header
 cget install pqrs-org/cpp-osx-iokit-ioobject_ptr@v1.3.0 --cmake header
+cget install pqrs-org/cpp-osx-iokit-ioservice_monitor@v1.0.0 --cmake header
+cget install pqrs-org/cpp-osx-iokit-types@v1.2.0 --cmake header
+cget install pqrs-org/cpp-thread_wait@v1.2.0 --cmake header
 ```
