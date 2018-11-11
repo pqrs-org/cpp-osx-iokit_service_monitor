@@ -1,9 +1,9 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
-#include <pqrs/osx/iokit/ioservice_monitor.hpp>
+#include <pqrs/osx/iokit_service_monitor.hpp>
 
-TEST_CASE("ioservice_monitor stress testing") {
+TEST_CASE("iokit_service_monitor stress testing") {
   auto time_source = std::make_shared<pqrs::dispatcher::hardware_time_source>();
   auto dispatcher = std::make_shared<pqrs::dispatcher::dispatcher>(time_source);
 
@@ -18,18 +18,20 @@ TEST_CASE("ioservice_monitor stress testing") {
     auto matching_dictionary = IOServiceNameMatching("IOHIDEventDriver");
     REQUIRE(matching_dictionary);
 
-    auto monitor = std::make_shared<pqrs::osx::iokit::ioservice_monitor>(dispatcher,
-                                                                         matching_dictionary);
+    auto monitor = std::make_shared<pqrs::osx::iokit_service_monitor>(dispatcher,
+                                                                      matching_dictionary);
 
-    monitor->ioservice_detected.connect([](auto&& registry_entry_id, auto&& service) {
+    monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service) {
+      // std::cout << "d" << std::flush;
     });
 
-    monitor->ioservice_removed.connect([](auto&& registry_entry_id) {
+    monitor->service_removed.connect([](auto&& registry_entry_id) {
+      // std::cout << "r" << std::flush;
     });
 
     monitor->async_start();
 
-    // wait until ioservice_monitor is started.
+    // wait until iokit_service_monitor is started.
     {
       auto wait = pqrs::make_thread_wait();
 
@@ -44,7 +46,7 @@ TEST_CASE("ioservice_monitor stress testing") {
 
     monitor->async_stop();
 
-    // wait until ioservice_monitor is stopped.
+    // wait until iokit_service_monitor is stopped.
     {
       auto wait = pqrs::make_thread_wait();
 

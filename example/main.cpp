@@ -1,6 +1,5 @@
 #include <csignal>
-#include <iostream>
-#include <pqrs/osx/iokit/ioservice_monitor.hpp>
+#include <pqrs/osx/iokit_service_monitor.hpp>
 
 namespace {
 auto global_wait = pqrs::make_thread_wait();
@@ -14,19 +13,19 @@ int main(void) {
   });
 
   if (auto matching_dictionary = IOServiceNameMatching("IOHIDEventDriver")) {
-    auto ioservice_monitor = std::make_unique<pqrs::osx::iokit::ioservice_monitor>(
+    auto service_monitor = std::make_unique<pqrs::osx::iokit_service_monitor>(
         pqrs::dispatcher::extra::get_shared_dispatcher(),
         matching_dictionary);
 
-    ioservice_monitor->ioservice_detected.connect([](auto&& registry_entry_id, auto&& service) {
-      std::cout << "ioservice_detected registry_entry_id:" << registry_entry_id << std::endl;
+    service_monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service) {
+      std::cout << "service_detected registry_entry_id:" << registry_entry_id << std::endl;
     });
 
-    ioservice_monitor->ioservice_removed.connect([](auto&& registry_entry_id) {
-      std::cout << "ioservice_removed registry_entry_id:" << registry_entry_id << std::endl;
+    service_monitor->service_removed.connect([](auto&& registry_entry_id) {
+      std::cout << "service_removed registry_entry_id:" << registry_entry_id << std::endl;
     });
 
-    ioservice_monitor->async_start();
+    service_monitor->async_start();
 
     global_wait->wait_notice();
 
