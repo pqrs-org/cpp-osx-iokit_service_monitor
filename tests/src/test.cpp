@@ -21,7 +21,7 @@ TEST_CASE("iokit_service_monitor stress testing") {
     auto monitor = std::make_shared<pqrs::osx::iokit_service_monitor>(dispatcher,
                                                                       matching_dictionary);
 
-    monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service) {
+    monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service_ptr) {
       // std::cout << "d" << std::flush;
     });
 
