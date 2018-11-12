@@ -17,12 +17,23 @@ int main(void) {
         pqrs::dispatcher::extra::get_shared_dispatcher(),
         matching_dictionary);
 
-    service_monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service) {
+    service_monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service_ptr) {
       std::cout << "service_detected registry_entry_id:" << registry_entry_id << std::endl;
+
+      io_name_t name;
+      pqrs::osx::iokit_return r = IORegistryEntryGetName(*service_ptr, name);
+      if (r) {
+        std::cout << "IORegistryEntryGetName: " << name << std::endl;
+      } else {
+        std::cout << "IORegistryEntryGetName Error: " << r << std::endl;
+      }
+
+      std::cout << std::endl;
     });
 
     service_monitor->service_removed.connect([](auto&& registry_entry_id) {
       std::cout << "service_removed registry_entry_id:" << registry_entry_id << std::endl;
+      std::cout << std::endl;
     });
 
     service_monitor->async_start();
