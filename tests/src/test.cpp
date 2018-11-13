@@ -21,6 +21,8 @@ TEST_CASE("iokit_service_monitor stress testing") {
     auto monitor = std::make_shared<pqrs::osx::iokit_service_monitor>(dispatcher,
                                                                       matching_dictionary);
 
+    CFRelease(matching_dictionary);
+
     monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service_ptr) {
       // std::cout << "d" << std::flush;
     });
@@ -44,7 +46,7 @@ TEST_CASE("iokit_service_monitor stress testing") {
       wait->wait_notice();
     }
 
-    monitor->async_stop();
+    monitor = nullptr;
 
     // wait until iokit_service_monitor is stopped.
     {
