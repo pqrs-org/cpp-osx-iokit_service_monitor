@@ -36,6 +36,10 @@ int main(void) {
       std::cout << std::endl;
     });
 
+    service_monitor->error_occurred.connect([](auto&& message, auto&& iokit_return) {
+      std::cerr << "error_occurred " << message << " " << iokit_return << std::endl;
+    });
+
     service_monitor->async_start();
 
     global_wait->wait_notice();
