@@ -23,11 +23,11 @@ TEST_CASE("iokit_service_monitor stress testing") {
 
     CFRelease(matching_dictionary);
 
-    monitor->service_detected.connect([](auto&& registry_entry_id, auto&& service_ptr) {
+    monitor->service_matched.connect([](auto&& registry_entry_id, auto&& service_ptr) {
       // std::cout << "d" << std::flush;
     });
 
-    monitor->service_removed.connect([](auto&& registry_entry_id) {
+    monitor->service_terminated.connect([](auto&& registry_entry_id) {
       // std::cout << "r" << std::flush;
     });
 
