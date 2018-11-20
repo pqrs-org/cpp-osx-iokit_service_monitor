@@ -1,6 +1,6 @@
 #pragma once
 
-// pqrs::iokit_service_monitor v2.2
+// pqrs::iokit_service_monitor v3.0
 
 // (C) Copyright Takayama Fumihiko 2018.
 // Distributed under the Boost Software License, Version 1.0.
