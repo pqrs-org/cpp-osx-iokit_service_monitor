@@ -78,7 +78,7 @@ public:
             error_occurred("IOServiceGetMatchingServices is failed.", r);
           });
         } else {
-          matched_callback(it);
+          matched_callback(make_services(it));
           IOObjectRelease(it);
         }
       }
@@ -128,7 +128,7 @@ private:
         } else {
           matched_notification_ = it;
           IOObjectRelease(it);
-          matched_callback(*matched_notification_);
+          matched_callback(make_services(*matched_notification_));
         }
       }
     }
@@ -152,7 +152,7 @@ private:
         } else {
           terminated_notification_ = it;
           IOObjectRelease(it);
-          terminated_callback(*terminated_notification_);
+          terminated_callback(make_services(*terminated_notification_));
         }
       }
     }
@@ -181,27 +181,21 @@ private:
       return;
     }
 
-    self->matched_callback(iterator);
+    auto services = make_services(iterator);
+
+    self->cf_run_loop_thread_->enqueue(^{
+      self->matched_callback(services);
+    });
   }
 
-  void matched_callback(io_iterator_t iterator) const {
-    cf_run_loop_thread_->enqueue(^{
-      if (iterator) {
-        while (auto s = IOIteratorNext(iterator)) {
-          if (s) {
-            if (auto registry_entry_id = find_registry_entry_id(s)) {
-              iokit_object_ptr ptr(s);
-
-              enqueue_to_dispatcher([this, registry_entry_id, ptr] {
-                service_matched(*registry_entry_id, ptr);
-              });
-            }
-
-            IOObjectRelease(s);
-          }
-        }
+  void matched_callback(const std::vector<iokit_object_ptr>& services) const {
+    for (const auto& s : services) {
+      if (auto registry_entry_id = find_registry_entry_id(s)) {
+        enqueue_to_dispatcher([this, registry_entry_id, s] {
+          service_matched(*registry_entry_id, *s);
+        });
       }
-    });
+    }
   }
 
   static void static_terminated_callback(void* _Nonnull refcon, io_iterator_t iterator) {
@@ -210,31 +204,43 @@ private:
       return;
     }
 
-    self->terminated_callback(iterator);
-  }
+    auto services = make_services(iterator);
 
-  void terminated_callback(io_iterator_t iterator) const {
-    cf_run_loop_thread_->enqueue(^{
-      if (iterator) {
-        while (auto s = IOIteratorNext(iterator)) {
-          if (s) {
-            if (auto registry_entry_id = find_registry_entry_id(s)) {
-              enqueue_to_dispatcher([this, registry_entry_id] {
-                service_terminated(*registry_entry_id);
-              });
-            }
-
-            IOObjectRelease(s);
-          }
-        }
-      }
+    self->cf_run_loop_thread_->enqueue(^{
+      self->terminated_callback(services);
     });
   }
 
-  std::optional<iokit_registry_entry_id> find_registry_entry_id(io_service_t service) const {
+  void terminated_callback(const std::vector<iokit_object_ptr>& services) const {
+    for (const auto& s : services) {
+      if (auto registry_entry_id = find_registry_entry_id(s)) {
+        enqueue_to_dispatcher([this, registry_entry_id] {
+          service_terminated(*registry_entry_id);
+        });
+      }
+    }
+  }
+
+  static std::vector<iokit_object_ptr> make_services(io_iterator_t iterator) {
+    std::vector<iokit_object_ptr> services;
+
+    if (iterator) {
+      while (auto s = IOIteratorNext(iterator)) {
+        if (s) {
+          services.emplace_back(s);
+
+          IOObjectRelease(s);
+        }
+      }
+    }
+
+    return services;
+  }
+
+  static std::optional<iokit_registry_entry_id> find_registry_entry_id(iokit_object_ptr service) {
     if (service) {
       uint64_t value;
-      iokit_return r = IORegistryEntryGetRegistryEntryID(service, &value);
+      iokit_return r = IORegistryEntryGetRegistryEntryID(*service, &value);
       if (r) {
         return iokit_registry_entry_id(value);
       }
