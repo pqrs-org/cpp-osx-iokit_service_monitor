@@ -38,7 +38,14 @@ public:
   }
 
   virtual ~iokit_service_monitor(void) {
+    // dispatcher_client
+
     detach_from_dispatcher([this] {
+    });
+
+    // cf_run_loop_thread
+
+    cf_run_loop_thread_->enqueue(^{
       stop();
     });
 
@@ -47,19 +54,19 @@ public:
   }
 
   void async_start(void) {
-    enqueue_to_dispatcher([this] {
+    cf_run_loop_thread_->enqueue(^{
       start();
     });
   }
 
   void async_stop(void) {
-    enqueue_to_dispatcher([this] {
+    cf_run_loop_thread_->enqueue(^{
       stop();
     });
   }
 
   void async_invoke_service_matched(void) {
-    enqueue_to_dispatcher([this] {
+    cf_run_loop_thread_->enqueue(^{
       if (*matching_dictionary_) {
         io_iterator_t it = IO_OBJECT_NULL;
         CFRetain(*matching_dictionary_);
@@ -79,7 +86,7 @@ public:
   }
 
 private:
-  // This method is executed in the dispatcher thread.
+  // This method is executed in cf_run_loop_thread_.
   void start(void) {
     if (!notification_port_) {
       notification_port_ = IONotificationPortCreate(kIOMasterPortDefault);
@@ -151,7 +158,7 @@ private:
     }
   }
 
-  // This method is executed in the dispatcher thread.
+  // This method is executed in cf_run_loop_thread_.
   void stop(void) {
     matched_notification_.reset();
     terminated_notification_.reset();
@@ -177,22 +184,24 @@ private:
     self->matched_callback(iterator);
   }
 
-  void matched_callback(io_iterator_t iterator) {
-    if (iterator) {
-      while (auto s = IOIteratorNext(iterator)) {
-        if (s) {
-          if (auto registry_entry_id = find_registry_entry_id(s)) {
-            iokit_object_ptr ptr(s);
+  void matched_callback(io_iterator_t iterator) const {
+    cf_run_loop_thread_->enqueue(^{
+      if (iterator) {
+        while (auto s = IOIteratorNext(iterator)) {
+          if (s) {
+            if (auto registry_entry_id = find_registry_entry_id(s)) {
+              iokit_object_ptr ptr(s);
 
-            enqueue_to_dispatcher([this, registry_entry_id, ptr] {
-              service_matched(*registry_entry_id, ptr);
-            });
+              enqueue_to_dispatcher([this, registry_entry_id, ptr] {
+                service_matched(*registry_entry_id, ptr);
+              });
+            }
+
+            IOObjectRelease(s);
           }
-
-          IOObjectRelease(s);
         }
       }
-    }
+    });
   }
 
   static void static_terminated_callback(void* _Nonnull refcon, io_iterator_t iterator) {
@@ -204,23 +213,25 @@ private:
     self->terminated_callback(iterator);
   }
 
-  void terminated_callback(io_iterator_t iterator) {
-    if (iterator) {
-      while (auto s = IOIteratorNext(iterator)) {
-        if (s) {
-          if (auto registry_entry_id = find_registry_entry_id(s)) {
-            enqueue_to_dispatcher([this, registry_entry_id] {
-              service_terminated(*registry_entry_id);
-            });
-          }
+  void terminated_callback(io_iterator_t iterator) const {
+    cf_run_loop_thread_->enqueue(^{
+      if (iterator) {
+        while (auto s = IOIteratorNext(iterator)) {
+          if (s) {
+            if (auto registry_entry_id = find_registry_entry_id(s)) {
+              enqueue_to_dispatcher([this, registry_entry_id] {
+                service_terminated(*registry_entry_id);
+              });
+            }
 
-          IOObjectRelease(s);
+            IOObjectRelease(s);
+          }
         }
       }
-    }
+    });
   }
 
-  std::optional<iokit_registry_entry_id> find_registry_entry_id(io_service_t service) {
+  std::optional<iokit_registry_entry_id> find_registry_entry_id(io_service_t service) const {
     if (service) {
       uint64_t value;
       iokit_return r = IORegistryEntryGetRegistryEntryID(service, &value);
