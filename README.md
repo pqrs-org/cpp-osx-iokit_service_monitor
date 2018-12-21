@@ -13,7 +13,7 @@ A wrapper class of IOService notifications.
 cpp-osx-iokit_service_monitor depends the following classes.
 
 - [Nod](https://github.com/fr00b0/nod)
-- [pqrs::cf_run_loop_thread](https://github.com/pqrs-org/cpp-cf_run_loop_thread)
+- [pqrs::cf::run_loop_thread](https://github.com/pqrs-org/cpp-cf-run_loop_thread)
 - [pqrs::dispatcher](https://github.com/pqrs-org/cpp-dispatcher)
 - [pqrs::osx::iokit_object_ptr](https://github.com/pqrs-org/cpp-osx-iokit_object_ptr)
 - [pqrs::osx::iokit_return](https://github.com/pqrs-org/cpp-osx-iokit_return)
