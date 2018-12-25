@@ -6,16 +6,16 @@ auto global_wait = pqrs::make_thread_wait();
 }
 
 int main(void) {
-  pqrs::dispatcher::extra::initialize_shared_dispatcher();
-
   std::signal(SIGINT, [](int) {
     global_wait->notify();
   });
 
+  auto time_source = std::make_shared<pqrs::dispatcher::hardware_time_source>();
+  auto dispatcher = std::make_shared<pqrs::dispatcher::dispatcher>(time_source);
+
   if (auto matching_dictionary = IOServiceNameMatching("IOHIDEventDriver")) {
-    auto service_monitor = std::make_unique<pqrs::osx::iokit_service_monitor>(
-        pqrs::dispatcher::extra::get_shared_dispatcher(),
-        matching_dictionary);
+    auto service_monitor = std::make_unique<pqrs::osx::iokit_service_monitor>(dispatcher,
+                                                                              matching_dictionary);
 
     service_monitor->service_matched.connect([](auto&& registry_entry_id, auto&& service_ptr) {
       std::cout << "service_matched registry_entry_id:" << registry_entry_id << std::endl;
@@ -47,7 +47,8 @@ int main(void) {
     CFRelease(matching_dictionary);
   }
 
-  pqrs::dispatcher::extra::terminate_shared_dispatcher();
+  dispatcher->terminate();
+  dispatcher = nullptr;
 
   std::cout << "finished" << std::endl;
 
