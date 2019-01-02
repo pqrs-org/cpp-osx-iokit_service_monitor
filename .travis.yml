@@ -3,4 +3,4 @@ os: osx
 osx_image: xcode10.1
 compiler: clang
 install: true
-script: make -C tests
+script: make -C example && make -C tests
