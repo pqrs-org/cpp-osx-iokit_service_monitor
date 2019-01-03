@@ -40,8 +40,7 @@ public:
   virtual ~iokit_service_monitor(void) {
     // dispatcher_client
 
-    detach_from_dispatcher([] {
-    });
+    detach_from_dispatcher();
 
     // cf_run_loop_thread
 
