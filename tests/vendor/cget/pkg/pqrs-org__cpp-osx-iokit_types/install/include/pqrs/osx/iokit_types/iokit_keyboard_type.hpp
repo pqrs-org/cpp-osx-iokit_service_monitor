@@ -10,7 +10,7 @@
 
 namespace pqrs {
 namespace osx {
-struct iokit_keyboard_type : type_safe::strong_typedef<iokit_keyboard_type, uint8_t>,
+struct iokit_keyboard_type : type_safe::strong_typedef<iokit_keyboard_type, uint64_t>,
                              type_safe::strong_typedef_op::equality_comparison<iokit_keyboard_type>,
                              type_safe::strong_typedef_op::relational_comparison<iokit_keyboard_type> {
   using strong_typedef::strong_typedef;
