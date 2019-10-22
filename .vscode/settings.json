@@ -6,5 +6,8 @@
   },
   "search.exclude": {
     "**/vendor/": true
+  },
+  "files.watcherExclude": {
+    "**/build/**": true
   }
 }
