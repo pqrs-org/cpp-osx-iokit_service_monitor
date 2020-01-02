@@ -1,17 +1,24 @@
 #pragma once
 
-// pqrs::osx::iokit_object_ptr v2.3
+// pqrs::osx::iokit_object_ptr v2.4
 
 // (C) Copyright Takayama Fumihiko 2018.
 // Distributed under the Boost Software License, Version 1.0.
 // (See http://www.boost.org/LICENSE_1_0.txt)
 
 #include <IOKit/IOKitLib.h>
+#include <optional>
+#include <pqrs/osx/iokit_return.hpp>
+#include <string>
 
 namespace pqrs {
 namespace osx {
 class iokit_object_ptr final {
 public:
+  //
+  // Constructors
+  //
+
   iokit_object_ptr(void) : iokit_object_ptr(IO_OBJECT_NULL) {
   }
 
@@ -44,6 +51,10 @@ public:
     reset();
   }
 
+  //
+  // Pointer methods
+  //
+
   const io_object_t& get(void) const {
     return p_;
   }
@@ -58,6 +69,50 @@ public:
       p_ = IO_OBJECT_NULL;
     }
   }
+
+  //
+  // Utility methods
+  //
+
+  uint32_t kernel_retain_count(void) const {
+    if (p_) {
+      return IOObjectGetKernelRetainCount(p_);
+    }
+
+    return 0;
+  }
+
+  uint32_t user_retain_count(void) const {
+    if (p_) {
+      return IOObjectGetUserRetainCount(p_);
+    }
+
+    return 0;
+  }
+
+  bool conforms_to(const io_name_t class_name) const {
+    if (p_) {
+      return IOObjectConformsTo(p_, class_name);
+    }
+
+    return false;
+  }
+
+  std::optional<std::string> class_name(void) const {
+    if (p_) {
+      io_name_t name;
+      iokit_return r = IOObjectGetClass(p_, name);
+      if (r) {
+        return name;
+      }
+    }
+
+    return std::nullopt;
+  }
+
+  //
+  // Operators
+  //
 
   operator bool(void) const {
     return p_ != IO_OBJECT_NULL;
