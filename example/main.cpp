@@ -21,7 +21,7 @@ int main(void) {
       std::cout << "service_matched registry_entry_id:" << registry_entry_id << std::endl;
 
       io_name_t name;
-      pqrs::osx::iokit_return r = IORegistryEntryGetName(*service_ptr, name);
+      pqrs::osx::kern_return r = IORegistryEntryGetName(*service_ptr, name);
       if (r) {
         std::cout << "IORegistryEntryGetName: " << name << std::endl;
       } else {
@@ -36,8 +36,8 @@ int main(void) {
       std::cout << std::endl;
     });
 
-    service_monitor->error_occurred.connect([](auto&& message, auto&& iokit_return) {
-      std::cerr << "error_occurred " << message << " " << iokit_return << std::endl;
+    service_monitor->error_occurred.connect([](auto&& message, auto&& kern_return) {
+      std::cerr << "error_occurred " << message << " " << kern_return << std::endl;
     });
 
     service_monitor->async_start();
