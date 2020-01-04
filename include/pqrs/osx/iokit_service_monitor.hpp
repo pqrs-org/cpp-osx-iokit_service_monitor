@@ -1,6 +1,6 @@
 #pragma once
 
-// pqrs::osx::iokit_service_monitor v3.7
+// pqrs::osx::iokit_service_monitor v3.8
 
 // (C) Copyright Takayama Fumihiko 2018.
 // Distributed under the Boost Software License, Version 1.0.
