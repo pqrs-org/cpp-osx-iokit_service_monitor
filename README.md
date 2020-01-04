@@ -17,6 +17,7 @@ cpp-osx-iokit_service_monitor depends the following classes.
 - [pqrs::dispatcher](https://github.com/pqrs-org/cpp-dispatcher)
 - [pqrs::osx::iokit_iterator](https://github.com/pqrs-org/cpp-osx-iokit_iterator)
 - [pqrs::osx::iokit_object_ptr](https://github.com/pqrs-org/cpp-osx-iokit_object_ptr)
+- [pqrs::osx::iokit_registry_entry](https://github.com/pqrs-org/cpp-osx-iokit_registry_entry)
 - [pqrs::osx::iokit_types](https://github.com/pqrs-org/cpp-osx-iokit_types)
 - [pqrs::osx::kern_return](https://github.com/pqrs-org/cpp-osx-kern_return)
 - [type_safe](https://github.com/foonathan/type_safe)
