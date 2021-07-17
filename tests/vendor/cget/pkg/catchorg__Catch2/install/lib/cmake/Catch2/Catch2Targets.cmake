@@ -4,7 +4,7 @@ if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.5)
    message(FATAL_ERROR "CMake >= 2.6.0 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 2.6...3.17)
+cmake_policy(VERSION 2.6...3.18)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -16,7 +16,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-foreach(_expectedTarget Catch2::Catch2 Catch2::Catch2WithMain)
+foreach(_expectedTarget Catch2::Catch2)
   list(APPEND _expectedTargets ${_expectedTarget})
   if(NOT TARGET ${_expectedTarget})
     list(APPEND _targetsNotDefined ${_expectedTarget})
@@ -56,13 +56,6 @@ add_library(Catch2::Catch2 INTERFACE IMPORTED)
 set_target_properties(Catch2::Catch2 PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_alignas;cxx_alignof;cxx_attributes;cxx_auto_type;cxx_constexpr;cxx_defaulted_functions;cxx_deleted_functions;cxx_final;cxx_lambdas;cxx_noexcept;cxx_override;cxx_range_for;cxx_rvalue_references;cxx_static_assert;cxx_strong_enums;cxx_trailing_return_types;cxx_unicode_literals;cxx_user_literals;cxx_variadic_macros"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-)
-
-# Create imported target Catch2::Catch2WithMain
-add_library(Catch2::Catch2WithMain STATIC IMPORTED)
-
-set_target_properties(Catch2::Catch2WithMain PROPERTIES
-  INTERFACE_LINK_LIBRARIES "Catch2::Catch2"
 )
 
 if(CMAKE_VERSION VERSION_LESS 3.0.0)
