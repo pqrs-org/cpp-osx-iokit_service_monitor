@@ -99,9 +99,7 @@ private:
       }
 
       if (auto loop_source = IONotificationPortGetRunLoopSource(notification_port_)) {
-        CFRunLoopAddSource(cf_run_loop_thread_->get_run_loop(),
-                           loop_source,
-                           kCFRunLoopCommonModes);
+        cf_run_loop_thread_->add_source(loop_source);
       } else {
         enqueue_to_dispatcher([this] {
           error_occurred("IONotificationPortGetRunLoopSource is failed.", kIOReturnError);
