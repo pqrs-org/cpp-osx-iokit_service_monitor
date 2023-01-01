@@ -8,6 +8,7 @@ int main(void) {
   "iokit_service_monitor stress testing"_test = [] {
     auto time_source = std::make_shared<pqrs::dispatcher::hardware_time_source>();
     auto dispatcher = std::make_shared<pqrs::dispatcher::dispatcher>(time_source);
+    auto run_loop_thread = std::make_shared<pqrs::cf::run_loop_thread>();
 
     auto object_id = pqrs::dispatcher::make_new_object_id();
     dispatcher->attach(object_id);
@@ -21,6 +22,7 @@ int main(void) {
       expect(matching_dictionary);
 
       auto monitor = std::make_shared<pqrs::osx::iokit_service_monitor>(dispatcher,
+                                                                        run_loop_thread,
                                                                         matching_dictionary);
 
       CFRelease(matching_dictionary);
@@ -67,6 +69,9 @@ int main(void) {
     std::cout << std::endl;
 
     dispatcher->detach(object_id);
+
+    run_loop_thread->terminate();
+    run_loop_thread = nullptr;
 
     dispatcher->terminate();
     dispatcher = nullptr;

@@ -12,9 +12,11 @@ int main(void) {
 
   auto time_source = std::make_shared<pqrs::dispatcher::hardware_time_source>();
   auto dispatcher = std::make_shared<pqrs::dispatcher::dispatcher>(time_source);
+  auto run_loop_thread = std::make_shared<pqrs::cf::run_loop_thread>();
 
   if (auto matching_dictionary = IOServiceNameMatching("IOHIDEventDriver")) {
     auto service_monitor = std::make_unique<pqrs::osx::iokit_service_monitor>(dispatcher,
+                                                                              run_loop_thread,
                                                                               matching_dictionary);
 
     service_monitor->service_matched.connect([](auto&& registry_entry_id, auto&& service_ptr) {
@@ -46,6 +48,9 @@ int main(void) {
 
     CFRelease(matching_dictionary);
   }
+
+  run_loop_thread->terminate();
+  run_loop_thread = nullptr;
 
   dispatcher->terminate();
   dispatcher = nullptr;
