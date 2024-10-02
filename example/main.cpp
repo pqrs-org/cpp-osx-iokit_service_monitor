@@ -1,3 +1,4 @@
+#include <IOKit/hid/IOHIDDevice.h>
 #include <csignal>
 #include <pqrs/osx/iokit_service_monitor.hpp>
 
@@ -14,7 +15,7 @@ int main(void) {
   auto dispatcher = std::make_shared<pqrs::dispatcher::dispatcher>(time_source);
   auto run_loop_thread = std::make_shared<pqrs::cf::run_loop_thread>();
 
-  if (auto matching_dictionary = IOServiceNameMatching("IOHIDEventDriver")) {
+  if (auto matching_dictionary = IOServiceMatching(kIOHIDDeviceKey)) {
     auto service_monitor = std::make_unique<pqrs::osx::iokit_service_monitor>(dispatcher,
                                                                               run_loop_thread,
                                                                               matching_dictionary);
