@@ -9,4 +9,4 @@ clean:
 	rm -rf build
 
 run:
-	./build/test
+	MallocNanoZone=0 ./build/test
