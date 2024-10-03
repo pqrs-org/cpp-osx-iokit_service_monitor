@@ -80,26 +80,6 @@ public:
     });
   }
 
-  void async_invoke_service_matched(void) {
-    run_loop_thread_->enqueue(^{
-      if (*matching_dictionary_) {
-        io_iterator_t it = IO_OBJECT_NULL;
-        CFRetain(*matching_dictionary_);
-        kern_return r = IOServiceGetMatchingServices(type_safe::get(iokit_mach_port::null),
-                                                     *matching_dictionary_,
-                                                     &it);
-        if (!r) {
-          enqueue_to_dispatcher([this, r] {
-            error_occurred("IOServiceGetMatchingServices is failed.", r);
-          });
-        } else {
-          matched_callback(make_services(iokit_iterator(it)));
-          IOObjectRelease(it);
-        }
-      }
-    });
-  }
-
 private:
   // This method is executed in run_loop_thread_.
   void start(void) {
