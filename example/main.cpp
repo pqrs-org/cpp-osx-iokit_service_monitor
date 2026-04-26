@@ -6,7 +6,7 @@ namespace {
 auto global_wait = pqrs::make_thread_wait();
 }
 
-int main(void) {
+int main() {
   std::signal(SIGINT, [](int) {
     global_wait->notify();
   });

@@ -48,7 +48,7 @@ public:
         scan_timer_(*this) {
   }
 
-  virtual ~iokit_service_monitor(void) {
+  virtual ~iokit_service_monitor() {
     // dispatcher_client
 
     detach_from_dispatcher([this] {
@@ -70,13 +70,13 @@ public:
     wait->wait_notice();
   }
 
-  void async_start(void) {
+  void async_start() {
     run_loop_thread_->enqueue(^{
       start();
     });
   }
 
-  void async_stop(void) {
+  void async_stop() {
     run_loop_thread_->enqueue(^{
       stop();
     });
@@ -84,7 +84,7 @@ public:
 
 private:
   // This method is executed in run_loop_thread_.
-  void start(void) {
+  void start() {
     if (!notification_port_) {
       notification_port_ = IONotificationPortCreate(type_safe::get(iokit_mach_port::null));
       if (!notification_port_) {
@@ -214,7 +214,7 @@ private:
   }
 
   // This method is executed in run_loop_thread_.
-  void stop(void) {
+  void stop() {
     matched_notification_ = iokit_iterator();
     terminated_notification_ = iokit_iterator();
 

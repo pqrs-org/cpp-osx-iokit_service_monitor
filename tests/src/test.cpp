@@ -1,7 +1,7 @@
 #include <boost/ut.hpp>
 #include <pqrs/osx/iokit_service_monitor.hpp>
 
-int main(void) {
+int main() {
   using namespace boost::ut;
   using namespace boost::ut::literals;
 
