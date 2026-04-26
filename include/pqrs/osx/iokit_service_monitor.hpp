@@ -8,6 +8,7 @@
 
 // `pqrs::osx::iokit_service_monitor` can be used safely in a multi-threaded environment.
 
+#include <algorithm>
 #include <nod/nod.hpp>
 #include <optional>
 #include <pqrs/cf/run_loop_thread.hpp>
@@ -19,8 +20,7 @@
 #include <pqrs/osx/kern_return.hpp>
 #include <unordered_set>
 
-namespace pqrs {
-namespace osx {
+namespace pqrs::osx {
 class iokit_service_monitor final : dispatcher::extra::dispatcher_client {
 public:
   // Signals (invoked from the dispatcher thread)
@@ -109,49 +109,47 @@ private:
 
     // kIOMatchedNotification
 
-    if (!matched_notification_.get()) {
-      if (*matching_dictionary_) {
-        io_iterator_t it = IO_OBJECT_NULL;
-        CFRetain(*matching_dictionary_);
-        kern_return r = IOServiceAddMatchingNotification(notification_port_,
-                                                         kIOFirstMatchNotification,
-                                                         *matching_dictionary_,
-                                                         &static_matched_callback,
-                                                         static_cast<void*>(this),
-                                                         &it);
-        if (r) {
-          matched_notification_ = iokit_iterator(it);
-          IOObjectRelease(it);
-          matched_callback(make_services(matched_notification_));
-        } else {
-          enqueue_to_dispatcher([this, r] {
-            error_occurred("IOServiceAddMatchingNotification is failed.", r);
-          });
-        }
+    if (!matched_notification_.get() &&
+        *matching_dictionary_) {
+      io_iterator_t it = IO_OBJECT_NULL;
+      CFRetain(*matching_dictionary_);
+      kern_return r = IOServiceAddMatchingNotification(notification_port_,
+                                                       kIOFirstMatchNotification,
+                                                       *matching_dictionary_,
+                                                       &static_matched_callback,
+                                                       static_cast<void*>(this),
+                                                       &it);
+      if (r) {
+        matched_notification_ = iokit_iterator(it);
+        IOObjectRelease(it);
+        matched_callback(make_services(matched_notification_));
+      } else {
+        enqueue_to_dispatcher([this, r] {
+          error_occurred("IOServiceAddMatchingNotification is failed.", r);
+        });
       }
     }
 
     // kIOTerminatedNotification
 
-    if (!terminated_notification_.get()) {
-      if (*matching_dictionary_) {
-        io_iterator_t it = IO_OBJECT_NULL;
-        CFRetain(*matching_dictionary_);
-        kern_return r = IOServiceAddMatchingNotification(notification_port_,
-                                                         kIOTerminatedNotification,
-                                                         *matching_dictionary_,
-                                                         &static_terminated_callback,
-                                                         static_cast<void*>(this),
-                                                         &it);
-        if (r) {
-          terminated_notification_ = iokit_iterator(it);
-          IOObjectRelease(it);
-          terminated_callback(make_services(terminated_notification_));
-        } else {
-          enqueue_to_dispatcher([this, r] {
-            error_occurred("IOServiceAddMatchingNotification is failed.", r);
-          });
-        }
+    if (!terminated_notification_.get() &&
+        *matching_dictionary_) {
+      io_iterator_t it = IO_OBJECT_NULL;
+      CFRetain(*matching_dictionary_);
+      kern_return r = IOServiceAddMatchingNotification(notification_port_,
+                                                       kIOTerminatedNotification,
+                                                       *matching_dictionary_,
+                                                       &static_terminated_callback,
+                                                       static_cast<void*>(this),
+                                                       &it);
+      if (r) {
+        terminated_notification_ = iokit_iterator(it);
+        IOObjectRelease(it);
+        terminated_callback(make_services(terminated_notification_));
+      } else {
+        enqueue_to_dispatcher([this, r] {
+          error_occurred("IOServiceAddMatchingNotification is failed.", r);
+        });
       }
     }
 
@@ -166,51 +164,49 @@ private:
 
       scan_timer_.start(
           [this] {
-            if (*matching_dictionary_) {
-              io_iterator_t it = IO_OBJECT_NULL;
-              CFRetain(*matching_dictionary_);
-              kern_return r = IOServiceGetMatchingServices(type_safe::get(iokit_mach_port::null),
-                                                           *matching_dictionary_,
-                                                           &it);
-              if (r) {
-                auto services = make_services(iokit_iterator(it));
-                IOObjectRelease(it);
+            if (!*matching_dictionary_) {
+              return;
+            }
 
-                // Call service_matched
+            io_iterator_t it = IO_OBJECT_NULL;
+            CFRetain(*matching_dictionary_);
+            kern_return r = IOServiceGetMatchingServices(type_safe::get(iokit_mach_port::null),
+                                                         *matching_dictionary_,
+                                                         &it);
+            if (r) {
+              auto services = make_services(iokit_iterator(it));
+              IOObjectRelease(it);
 
-                for (const auto& s : services) {
-                  if (auto registry_entry_id = s.find_registry_entry_id()) {
-                    invoke_service_matched(*registry_entry_id, s);
-                  }
+              // Call service_matched
+
+              for (const auto& s : services) {
+                if (auto registry_entry_id = s.find_registry_entry_id()) {
+                  invoke_service_matched(*registry_entry_id, s);
                 }
-
-                // Call service_terminated
-
-                std::unordered_set<iokit_registry_entry_id::value_t> terminated_registry_entry_ids;
-
-                for (const auto stored_registry_entry_id : registry_entry_ids_) {
-                  bool found = false;
-                  for (const auto& s : services) {
-                    if (auto registry_entry_id = s.find_registry_entry_id()) {
-                      if (stored_registry_entry_id == *registry_entry_id) {
-                        found = true;
-                      }
-                    }
-                  }
-
-                  if (!found) {
-                    terminated_registry_entry_ids.insert(stored_registry_entry_id);
-                  }
-                }
-
-                for (const auto terminated_registry_entry_id : terminated_registry_entry_ids) {
-                  invoke_service_terminated(terminated_registry_entry_id);
-                }
-              } else {
-                enqueue_to_dispatcher([this, r] {
-                  error_occurred("IOServiceGetMatchingServices is failed.", r);
-                });
               }
+
+              // Call service_terminated
+
+              std::unordered_set<iokit_registry_entry_id::value_t> terminated_registry_entry_ids;
+
+              for (const auto stored_registry_entry_id : registry_entry_ids_) {
+                if (!std::ranges::any_of(services, [stored_registry_entry_id](const auto& s) {
+                      if (auto registry_entry_id = s.find_registry_entry_id()) {
+                        return stored_registry_entry_id == *registry_entry_id;
+                      }
+                      return false;
+                    })) {
+                  terminated_registry_entry_ids.insert(stored_registry_entry_id);
+                }
+              }
+
+              for (const auto terminated_registry_entry_id : terminated_registry_entry_ids) {
+                invoke_service_terminated(terminated_registry_entry_id);
+              }
+            } else {
+              enqueue_to_dispatcher([this, r] {
+                error_occurred("IOServiceGetMatchingServices is failed.", r);
+              });
             }
           },
           std::chrono::milliseconds(3000));
@@ -303,12 +299,7 @@ private:
   static std::vector<iokit_registry_entry> make_services(const iokit_iterator& iterator) {
     std::vector<iokit_registry_entry> services;
 
-    while (true) {
-      auto next = iterator.next();
-      if (!next) {
-        break;
-      }
-
+    while (auto next = iterator.next()) {
       services.emplace_back(iokit_registry_entry(next));
     }
 
@@ -325,5 +316,4 @@ private:
   pqrs::dispatcher::extra::timer scan_timer_;
   std::unordered_set<iokit_registry_entry_id::value_t> registry_entry_ids_;
 };
-} // namespace osx
-} // namespace pqrs
+} // namespace pqrs::osx
